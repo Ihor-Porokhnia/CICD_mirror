@@ -1,0 +1,125 @@
+---
+    
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  replicas: 5
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: bugoga/ngnx:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 443
+          hostPort: 443
+        - containerPort: 80
+          hostPort: 80
+
+---
+    
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tomcat-deployment
+spec:
+  selector:
+    matchLabels:
+      app: tomcat
+  replicas: 5
+  template:
+    metadata:
+      labels:
+        app: tomcat
+    spec:
+      containers:
+      - name: tomcat
+        image: gcr.io/epam-267215/tomas:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          hostPort: 8080
+
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  labels:
+    name: nginx
+spec:
+  type: NodePort
+  ports:
+    - port: 80
+      nodePort: 30080
+      name: htp
+    - port: 443
+      nodePort: 30081
+      name: hts
+  selector:
+    name: nginx
+ 
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: tomcat
+  labels:
+    name: tomcat
+spec:
+  type: NodePort
+  ports:
+    - port: 8080
+      nodePort: 30085
+  selector:
+    name: tomcat
+    
+---
+    
+apiVersion: v1
+kind: Service
+metadata:
+  name: lb-nginx
+  labels:
+    app: nginx
+spec:
+  selector:
+    app: nginx
+  ports:
+  - port: 80
+    targetPort: 80
+    name: ngnx-htp
+  - port: 443
+    targetPort: 443
+    name: ngnx-hts
+  type: LoadBalancer
+    
+---
+    
+apiVersion: v1
+kind: Service
+metadata:
+  name: lb-tomcat
+  labels:
+    app: tomcat
+spec:
+  selector:
+    app: tomcat
+  ports:
+  - port: 8080
+    targetPort: 8080
+
+  type: LoadBalancer
+    
+        

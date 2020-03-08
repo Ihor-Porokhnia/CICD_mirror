@@ -1,0 +1,27 @@
+---
+
+  - hosts: tag_Environment_Staging
+    gather_facts: true
+    serial: 1
+    become: true
+  
+    tasks:
+              
+      - name: Rollback front
+        synchronize: src=/var/www/backup/front dest=/var/www
+        delegate_to: "{{ inventory_hostname }}"
+  
+  
+  
+      - name: Rollback back 
+        synchronize:
+          src: /opt/tomcat/latest/backup/webapps
+          dest: /opt/tomcat/latest/
+          rsync_path: "sudo rsync"
+        delegate_to: "{{ inventory_hostname }}" 
+  
+       
+      - name: Reload daemons
+        service: name=nginx state=restarted
+        service: name=tomcat state=restarted
+  

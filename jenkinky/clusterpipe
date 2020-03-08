@@ -1,0 +1,35 @@
+#!groovy
+properties([[$class: 'JiraProjectProperty'], buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '2', numToKeepStr: '2')), disableConcurrentBuilds(), disableResume(), parameters([string(defaultValue: 'create', description: '', name: 'OPERATION', trim: true), string(defaultValue: '1', description: '', name: 'COUNT', trim: true)])])
+node('Frontend') {
+  stage('Checkout')  {
+    git credentialsId: 'ssh-key-main', url: 'git@github.com:Ihor-Porokhnia/CICD.git'
+  }
+  stage('TerraPlay')  {    
+    if (OPERATION == 'create'){
+              sh 'terraform init ./terraforest/plan_03'
+              sh 'terraform plan ./terraforest/plan_03'
+              sh 'terraform apply -auto-approve ./terraforest/plan_03'
+              /*sh 'kubectl apply -f ./kuberpunk/start-deploy.yaml'
+              sh 'kubectl patch svc lb-nginx -p \'{"spec":{"loadBalancerIP":"\'"$(gcloud compute addresses list | grep k8s | cut -d " " -f 3)"\'"}}\''
+              sh 'kubectl patch svc lb-tomcat -p \'{"spec":{"loadBalancerIP":"\'"$(gcloud compute addresses list | grep k8s | cut -d " " -f 3)"\'"}}\''
+              sh 'kubectl patch svc lb-nginx -p \'{"spec":{"loadBalancerIP":"\'"$(gcloud compute addresses list | grep k8s | cut -d " " -f 3)"\'"}}\''
+              sh 'kubectl patch svc lb-tomcat -p \'{"spec":{"loadBalancerIP":"\'"$(gcloud compute addresses list | grep k8s | cut -d " " -f 3)"\'"}}\''
+              sh 'kubectl patch svc lb-nginx -p \'{"spec":{"loadBalancerIP":"\'"$(gcloud compute addresses list | grep k8s | cut -d " " -f 3)"\'"}}\''
+              sh 'kubectl patch svc lb-tomcat -p \'{"spec":{"loadBalancerIP":"\'"$(gcloud compute addresses list | grep k8s | cut -d " " -f 3)"\'"}}\''
+              */
+    }
+    else if (OPERATION == 'destroy') {
+              sh 'terraform init ./terraforest/plan_03'
+              sh 'terraform plan ./terraforest/plan_03'
+              sh 'terraform destroy -auto-approve ./terraforest/plan_03'
+    }
+    
+    else if (OPERATION == 'rolloutf') {
+              sh 'kubectl set image deployment/nginx-deployment nginx=bugoga/ngnx:$COUNT --record'
+              sh 'kubectl scale deployment nginx-deployment --replicas=0'
+              sh 'kubectl scale deployment nginx-deployment --replicas=5'
+
+    }
+    
+  }
+}

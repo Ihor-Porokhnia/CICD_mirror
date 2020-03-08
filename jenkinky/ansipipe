@@ -1,0 +1,24 @@
+#!groovy
+properties([[$class: 'JiraProjectProperty'], buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '2', numToKeepStr: '2')), disableConcurrentBuilds(), disableResume(), parameters([string(defaultValue: '1', description: '', name: 'OPERATION', trim: true), string(defaultValue: '1', description: '', name: 'COUNT', trim: true)])])
+node('Frontend') {
+  stage('Checkout')  {
+    git credentialsId: 'ssh-key-main', url: 'git@github.com:Ihor-Porokhnia/CICD.git'
+  }
+  stage('AnsiPlay')  {
+
+    if (OPERATION == 'nodeinit') {
+
+              ansiblePlaybook credentialsId: 'ssh-key-main', extras: '-e ansible_python_interpreter=/usr/bin/python3', playbook: 'ansibloom/block1/nodeinit.yml'
+    }
+    else if (OPERATION == 'rollout') {
+              ansiblePlaybook credentialsId: 'ssh-key-main', extras: '-e ansible_python_interpreter=/usr/bin/python3', playbook: 'ansibloom/block2/ec2_2.yaml'
+    }
+    else if (OPERATION == 'rollback') {
+              ansiblePlaybook credentialsId: 'ssh-key-main', extras: '-e ansible_python_interpreter=/usr/bin/python3 -vv', playbook: 'ansibloom/block3/ec2_3.yaml'
+    }
+    else if (OPERATION == '4') {
+              ansiblePlaybook credentialsId: 'ssh-key-main', extras: '-e ansible_python_interpreter=/usr/bin/python3', playbook: 'ansibloom/block_/ec2_3.yaml'
+    }
+
+  }
+}

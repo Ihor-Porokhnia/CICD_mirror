@@ -1,0 +1,25 @@
+#!groovy
+node('master') {
+ 
+ properties([
+  pipelineTriggers([
+   [$class: 'GenericTrigger',
+    genericVariables: [
+     [ key: 'tag', value: '$.push_data.tag' ],
+     [ key: 'name', value: '$.repository.name' ],
+    ],
+    token: 'dk',
+    printContributedVariables: true,
+    printPostContent: true,
+
+   ]
+  ])
+ ])
+ 
+  
+ 
+ 
+ 
+ stage('check'){  build job: 'clusterpipe', parameters: [string(name: 'OPERATION', value: 'rolloutf'), string(name: 'COUNT', value: tag)] }
+ 
+}

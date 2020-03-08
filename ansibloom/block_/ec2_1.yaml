@@ -1,0 +1,64 @@
+---
+
+- hosts: all
+  gather_facts: true
+  become: true
+  vars:
+    DOMAIN_ROOT: bugoga.ga
+    CERT_MAIL: myip127.0.0.0@gmail.com
+    HOST_COUNT: "{{ groups['all'] | length }}"
+  tasks:
+    - name: Upgrade System
+      apt:
+        update_cache: yes
+
+    - name: Install NGINX
+      apt:
+       name: nginx
+       state: present
+
+    - name: install letsencrypt
+      apt: name=letsencrypt state=latest
+
+    - name: Remove default nginx config
+      file: name=/etc/nginx/sites-enabled/default state=absent
+      file: name=/etc/nginx/sites-available/default state=absent
+
+
+    - name: Template NGINX conf gnerator
+      template:
+        src: nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+
+    - name: Generate site conf
+      template:
+        src: default4.j2
+        dest: /etc/nginx/sites-enabled/default
+
+    - name: Generate dhparams
+      shell: openssl dhparam -out /etc/nginx/dhparams.pem 2048
+      args:
+        creates: /etc/nginx/dhparams.pem
+
+    - name: Create letsencrypt directory
+      file: name=/var/www/front state=directory
+
+    - name: Move fullchain
+      copy:
+        src: fullchain.pem
+        dest: /etc/letsencrypt/live/{{ DOMAIN_ROOT }}/
+    - name: Move privkey
+      copy:
+        src: privkey.pem
+        dest: /etc/letsencrypt/live/{{ DOMAIN_ROOT }}/
+
+    - name: Add site directory
+      file: name=/etc/letsencrypt/live/{{ DOMAIN_ROOT }} state=directory
+
+    - name: Generate default webpage
+      template:
+        src: index.html.j2
+        dest: /var/www/front/index.html
+      
+    - name: Reload nginx to activate conf
+      service: name=nginx state=restarted
